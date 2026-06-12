@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
     FILE *in, *out;
     char line[MAX_LINE];
     char val[MAX_LINE];
+	int No_Audio_Track;
     
     /* Metadata buffers extracted from the XML */
     char vol_id[128] = "PLAYSTATION";
@@ -136,7 +137,9 @@ int main(int argc, char **argv) {
     fprintf(out, "  PostGap 150\nEndTrack\n\n");
 
     /* Pass 3: Process trailing CD-DA waveform Red-Book audio tracks */
-    fseek(in, 0, SEEK_SET);
+    No_Audio_Track=1;
+	
+	fseek(in, 0, SEEK_SET);
     while (fgets(line, sizeof(line), in)) {
         if (strstr(line, "<track type=\"audio\"")) {
             char source[256];
@@ -147,12 +150,23 @@ int main(int argc, char **argv) {
             }
             
             fprintf(out, "Track Audio\n  Empty 150\n  Source D:\\%s\nEndTrack\n\n", source);
+
+			No_Audio_Track=0;
             
             //break;
         }
     }
+	
+	if (No_Audio_Track)
+	{
+		fprintf(out, "LeadOut XA\n  Empty 150\nEndTrack\n\n");
+		fprintf(out, "EndDisc\n");
+	} else 
+	
+	{
 	fprintf(out, "LeadOut Audio\n  Empty 150\nEndTrack\n\n");
     fprintf(out, "EndDisc\n");
+	}
 
     fclose(in);
     fclose(out);
